@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import threading
 import time
@@ -39,11 +40,13 @@ class Supervisor:
         health_url: str | None = None,
         health_interval: float = 30.0,
         health_failures: int = 3,
+        env: dict[str, str] | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
     ):
         self.command = list(command)
         self.cwd = cwd
+        self.env = env
         self.backoff = backoff or Backoff()
         self.health_url = health_url
         self.health_interval = health_interval
@@ -72,7 +75,8 @@ class Supervisor:
 
     def _run_once(self) -> int:
         self._proc = subprocess.Popen(
-            self.command, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL
+            self.command, cwd=self.cwd, env={**os.environ, **self.env} if self.env else None,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL
         )
         threads = [
             threading.Thread(target=_pipe_to_log, args=(self._proc.stdout, self.log, logging.INFO), daemon=True),

@@ -67,6 +67,7 @@ def task_xml(
     highest: bool = False,
     log_file: str | None = None,
     python: str | None = None,
+    env: dict[str, str] | None = None,
 ) -> str:
     """XML cho schtasks: chạy `winservice run -- <command>` khi khởi động (hoặc khi đăng nhập)."""
     python = python or sys.executable.replace("python.exe", "pythonw.exe")
@@ -75,6 +76,8 @@ def task_xml(
         sup_args += ["--log", log_file]
     if workdir:
         sup_args += ["--cwd", workdir]
+    for key, value in (env or {}).items():
+        sup_args += ["--env", f"{key}={value}"]
     sup_args += ["--", *command]
     if user:
         logon = "InteractiveToken" if at_logon else "S4U"  # S4U: chạy cả khi chưa đăng nhập, không lưu mật khẩu

@@ -38,6 +38,9 @@ pip install git+https://github.com/ferbdev-byte/win-service-kit
 # Chạy thử ở terminal
 winservice run --log C:\Logs\app.log -- python C:\App\server.py
 
+# Truyền biến môi trường cho ứng dụng (lặp được)
+winservice run --env PORT=8765 --env MODE=prod -- python server.py
+
 # Có kiểm tra sức khoẻ
 winservice run --health-url http://127.0.0.1:8765/api/ping -- python server.py
 
