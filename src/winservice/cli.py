@@ -21,6 +21,17 @@ def _split(argv: list[str]) -> tuple[list[str], list[str]]:
     return argv, []
 
 
+def parse_env(items: list[str]) -> dict[str, str]:
+    """["A=1", "B=x=y"] -> {"A": "1", "B": "x=y"}; báo lỗi nếu thiếu dấu =."""
+    out: dict[str, str] = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep or not key:
+            raise SystemExit(f"--env cần dạng KHOA=GIA_TRI, nhận được {item!r}")
+        out[key] = value
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     own, command = _split(list(sys.argv[1:] if argv is None else argv))
     p = argparse.ArgumentParser(prog="winservice", description="Giữ một lệnh chạy 24/24 trên Windows.")
@@ -30,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("run", help="chạy và giám sát lệnh sau dấu --")
     r.add_argument("--log", help="file log (xoay vòng 5 MB × 5)")
     r.add_argument("--cwd")
+    r.add_argument("--env", action="append", default=[], metavar="KHOA=GIA_TRI",
+                   help="biến môi trường cho ứng dụng, lặp được")
     r.add_argument("--health-url", help="URL trả 2xx khi ứng dụng khoẻ")
     r.add_argument("--max-restarts", type=int, default=10)
 
@@ -41,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         i.add_argument("--highest", action="store_true", help="chạy với quyền cao nhất")
         i.add_argument("--log")
         i.add_argument("--cwd")
+        i.add_argument("--env", action="append", default=[], metavar="KHOA=GIA_TRI")
 
     for name in ("uninstall", "status"):
         sub.add_parser(name).add_argument("--name", required=True)
@@ -50,7 +64,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "run":
         if not command:
             p.error("cần lệnh sau dấu --, vd. winservice run -- python app.py")
-        sup = Supervisor(command, args.log, args.cwd, Backoff(max_restarts=args.max_restarts), args.health_url)
+        sup = Supervisor(command, args.log, args.cwd, Backoff(max_restarts=args.max_restarts), args.health_url,
+                         env=parse_env(args.env))
         signal.signal(signal.SIGINT, lambda *_: sup.stop())
         if hasattr(signal, "SIGBREAK"):
             signal.signal(signal.SIGBREAK, lambda *_: sup.stop())
@@ -59,7 +74,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd in ("install", "xml"):
         if not command:
             p.error("cần lệnh sau dấu --")
-        xml = task_xml(args.name, command, args.cwd, args.user, args.at_logon, args.highest, args.log)
+        xml = task_xml(args.name, command, args.cwd, args.user, args.at_logon, args.highest, args.log,
+                       env=parse_env(args.env))
         if args.cmd == "xml":
             print(xml)
             return 0
