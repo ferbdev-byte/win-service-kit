@@ -7,8 +7,6 @@
 
 Biến một script bất kỳ (Python, Node, `.exe`) thành dịch vụ chạy **24/24** trên Windows: tự khởi động cùng máy, tự bật lại khi chết, ghi log xoay vòng, kiểm tra sức khoẻ qua HTTP. Không cần pywin32, không cần NSSM, không cần quyền viết Windows Service.
 
-> Tách ra từ cách mình cho máy chủ nội bộ của công ty chạy liên tục không cần ai trông.
-
 ```mermaid
 flowchart TB
     B[Máy khởi động] --> T[Task Scheduler<br/>BootTrigger]
