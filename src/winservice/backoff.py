@@ -15,7 +15,7 @@ class Backoff:
     max_restarts: int = 10          # quá số lần này trong `window` giây thì bỏ cuộc
     window: float = 600.0
     _attempt: int = 0
-    _history: deque = field(default_factory=deque)
+    _history: deque[float] = field(default_factory=deque)
 
     def next_delay(self, ran_for: float, now: float) -> float | None:
         """Gọi sau mỗi lần tiến trình thoát. Trả về số giây cần chờ, hoặc None nếu nên dừng hẳn."""

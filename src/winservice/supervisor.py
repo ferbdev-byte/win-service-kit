@@ -10,11 +10,12 @@ import urllib.request
 from collections.abc import Callable, Sequence
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import IO
 
 from .backoff import Backoff
 
 
-def _pipe_to_log(stream, logger: logging.Logger, level: int) -> None:
+def _pipe_to_log(stream: IO[bytes], logger: logging.Logger, level: int) -> None:
     for raw in iter(stream.readline, b""):
         logger.log(level, raw.decode("utf-8", errors="replace").rstrip())
     stream.close()
@@ -23,7 +24,7 @@ def _pipe_to_log(stream, logger: logging.Logger, level: int) -> None:
 def http_ok(url: str, timeout: float = 5.0) -> bool:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:  # noqa: S310 - URL do người cấu hình đưa vào
-            return 200 <= r.status < 400
+            return bool(200 <= r.status < 400)
     except Exception:
         return False
 
@@ -50,7 +51,7 @@ class Supervisor:
         self.clock, self.sleep = clock, sleep
         self.restarts = 0
         self._stop = threading.Event()
-        self._proc: subprocess.Popen | None = None
+        self._proc: subprocess.Popen[bytes] | None = None
 
         self.log = logging.getLogger(f"winservice.{id(self)}")
         self.log.setLevel(logging.INFO)
