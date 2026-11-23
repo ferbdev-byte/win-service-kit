@@ -20,7 +20,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5"]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
 
 [project.scripts]
 winservice = "winservice.cli:main"
@@ -29,7 +29,7 @@ winservice = "winservice.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-winservice = ["*.ttf", "*.json"]
+winservice = ["py.typed", "*.ttf", "*.json"]
 
 [tool.ruff]
 line-length = 125
@@ -41,3 +41,8 @@ select = ["E", "F", "W", "I", "B", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+files = ["src"]
